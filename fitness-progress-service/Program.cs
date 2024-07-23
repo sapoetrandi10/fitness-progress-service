@@ -1,4 +1,6 @@
 using fitness_db.Data;
+using fitness_progress_service.Interfaces;
+using fitness_progress_service.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace fitness_progress_service
@@ -10,19 +12,6 @@ namespace fitness_progress_service
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-
-            builder.Services.AddDbContext<FitnessContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
-
-
             bool useCors = builder.Configuration.GetValue<bool>("CorsSettings:UseCors");
             if (useCors)
             {
@@ -40,6 +29,24 @@ namespace fitness_progress_service
                     });
                 });
             }
+
+            builder.Services.AddDbContext<FitnessContext>(options =>
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
+
+            builder.Services.AddControllers();
+            builder.Services.AddScoped<IUserWorkoutRepossitory, UserWorkoutRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IWorkoutRepository, WorkoutRepository>();
+            builder.Services.AddScoped<IUserNutritionRepository, UserNutritionRepository>();
+            builder.Services.AddScoped<INutritionRepository, NutritionRepository>();
+            builder.Services.AddScoped<IProgressRepository, ProgressRepository>();
+
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
 
             var app = builder.Build();
 
