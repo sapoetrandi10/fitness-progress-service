@@ -6,9 +6,9 @@ namespace fitness_progress_service.Interfaces
     public interface IUserWorkoutRepossitory
     {
         public bool CreateUserWorkout(UserWorkout UserWorkout);
-        //public Workout UpdateUserWorkout(Workout Workout);
+        public UserWorkout UpdateUserWorkout(UserWorkout UserWorkout);
         public bool DeleteUserWorkout(UserWorkout UserWorkout);
-        //public ICollection<Workout> GetUserWorkouts();
+        public ICollection<UserWorkout> GetUserWorkouts();
         public UserWorkout GetUserWorkout(int userWorkoutId);
         //public Workout GetUserWorkoutPeriod(string workoutPeriod);
     }

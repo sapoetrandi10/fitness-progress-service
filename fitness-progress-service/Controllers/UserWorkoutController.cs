@@ -31,84 +31,232 @@ namespace fitness_progress_service.Controllers
                 if (reqUserWorkout == null)
                     return BadRequest(new
                     {
-                        status = "failed",
+                        status = "Failed",
                         message = "Requset not valid"
                     });
 
                 var checkUser = _userRep.GetUser(reqUserWorkout.UserID);
                 if (checkUser == null)
-                    return BadRequest(new
+                    return Ok(new
                     {
-                        status = "failed",
-                        message = "User not found!"
+                        status = "Failed",
+                        message = "User not found!",
+                        data = checkUser
                     });
 
                 var checkWorkout = _workoutRep.GetWorkout(reqUserWorkout.WorkoutID);
                 if (checkWorkout == null)
-                    return BadRequest(new
+                    return Ok(new
                     {
-                        status = "failed",
-                        message = "Workout not found!"
+                        status = "Failed",
+                        message = "Workout not found!",
+                        data = checkWorkout
                     });
 
+                //DateTimeOffset localDateTimeOffset = new DateTimeOffset(reqUserWorkout.UserWorkoutDate, TimeZoneInfo.FindSystemTimeZoneById("Asia/Jakarta").BaseUtcOffset);
+                var datetime = reqUserWorkout.UserWorkoutDate;
                 var userWorkout = new UserWorkout
                 {
                     UserID = reqUserWorkout.UserID,
                     WorkoutID = reqUserWorkout.WorkoutID,
                     WorkoutDuration = reqUserWorkout.WorkoutDuration,
-                    UserWorkoutDate = reqUserWorkout.UserWorkoutDate,
+                    UserWorkoutDate = datetime,
                 };
 
                 if (!_userWorkoutRep.CreateUserWorkout(userWorkout))
                 {
-                    ModelState.AddModelError("", "Something went wrong while saving");
-                    return StatusCode(500, ModelState);
+                    return StatusCode(500, new
+                    {
+                        status = "Failed",
+                        message = "Something went wrong while saving",
+                    });
                 }
 
                 return Ok(new
                 {
-                    status = "success",
-                    message = "User Workout Successfully created"
+                    status = "Success",
+                    message = "User Workout Successfully created",
+                    data = userWorkout
                 });
             }
             catch (Exception e)
             {
                 return BadRequest(new
                 {
-                    status = "failed",
+                    status = "Failed",
                     message = e.Message,
                     excption = e.InnerException.Message
                 });
-                throw;
+
+            }
+        }
+
+        [HttpPut("{userWorkoutId}")]
+        public IActionResult UpdateUserWorkout(int userWorkoutId, [FromBody] ReqUserWorkoutDto reqUserWorkout)
+        {
+            try
+            {
+                if (reqUserWorkout == null)
+                    return BadRequest(new
+                    {
+                        status = "Failed",
+                        message = "Requset not valid"
+                    });
+
+                var isUserWorkoutExist = _userWorkoutRep.GetUserWorkout(userWorkoutId);
+
+                if (isUserWorkoutExist == null)
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Workout not found!"
+                    });
+
+                //DateTimeOffset localDateTimeOffset = new DateTimeOffset(reqUserWorkout.UserWorkoutDate, TimeZoneInfo.FindSystemTimeZoneById("Asia/Jakarta").BaseUtcOffset);
+                var datetime = reqUserWorkout.UserWorkoutDate;
+                isUserWorkoutExist.UserWorkoutID = userWorkoutId;
+                isUserWorkoutExist.WorkoutDuration = reqUserWorkout.WorkoutDuration;
+                isUserWorkoutExist.UserWorkoutDate = datetime;
+
+                var updatedProgress = _userWorkoutRep.UpdateUserWorkout(isUserWorkoutExist);
+                if (updatedProgress == null)
+                {
+                    return StatusCode(500, new
+                    {
+                        status = "Failed",
+                        message = "Something went wrong updating user workout"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User Workout Successfully updated",
+                    data = updatedProgress
+                });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+
             }
         }
 
         [HttpDelete("{userWorkoutId}")]
         public IActionResult DeleteUserWorkout(int userWorkoutId)
         {
-            var isUserWorkoutExist = _userWorkoutRep.GetUserWorkout(userWorkoutId);
+            try
+            {
+                var isUserWorkoutExist = _userWorkoutRep.GetUserWorkout(userWorkoutId);
 
-            if (isUserWorkoutExist == null)
-                return NotFound(new
+                if (isUserWorkoutExist == null)
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Workout not found!"
+                    });
+
+                if (!_userWorkoutRep.DeleteUserWorkout(isUserWorkoutExist))
                 {
-                    status = "failed",
-                    message = "User Workout not found!"
-                });
+                    return StatusCode(500, new
+                    {
+                        status = "Failed",
+                        message = "Something went wrong deleting user nutrition!"
+                    });
+                }
 
-            if (!_userWorkoutRep.DeleteUserWorkout(isUserWorkoutExist))
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User Workout Successfully Deleted"
+                });
+            }
+            catch (Exception e)
             {
                 return BadRequest(new
                 {
-                    status = "failed",
-                    message = "Something went wrong deleting user workout!"
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetUserWorkouts()
+        {
+            try
+            {
+                var allUserWorkouts = _userWorkoutRep.GetUserWorkouts();
+
+                if (allUserWorkouts.Count <= 0)
+                {
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Workout is empty!"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "All User Workout Successfully fetched",
+                    data = allUserWorkouts
                 });
             }
-
-            return Ok(new
+            catch (Exception e)
             {
-                status = "success",
-                message = "User Workout Successfully Deleted"
-            });
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+
+            }
+        }
+
+        [HttpGet("{userWorkoutId}")]
+        public IActionResult GetUserWorkout(int userWorkoutId)
+        {
+            try
+            {
+                var userWorkout = _userWorkoutRep.GetUserWorkout(userWorkoutId);
+
+                if (userWorkout == null)
+                {
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Workout not found!",
+                        data = userWorkout
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User Workout Successfully fetched",
+                    data = userWorkout
+                });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+
+            }
         }
     }
 }

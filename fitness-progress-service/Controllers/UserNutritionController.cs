@@ -2,6 +2,7 @@
 using fitness_progress_service.Dto.Req;
 using fitness_progress_service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace fitness_progress_service.Controllers
 {
@@ -28,44 +29,52 @@ namespace fitness_progress_service.Controllers
                 if (reqUserNutrition == null)
                     return BadRequest(new
                     {
-                        status = "failed",
-                        message = "Requset not valid"
+                        status = "Failed",
+                        message = "Request not valid"
                     });
 
                 var checkUser = _userRep.GetUser(reqUserNutrition.UserID);
                 if (checkUser == null)
-                    return BadRequest(new
+                    return Ok(new
                     {
-                        status = "failed",
-                        message = "User not found!"
+                        status = "Failed",
+                        message = "User not found!",
+                        data = checkUser
                     });
 
                 var checkNutrition = _nutritionRep.GetNutrition(reqUserNutrition.NutritionID);
                 if (checkNutrition == null)
-                    return BadRequest(new
+                    return Ok(new
                     {
-                        status = "failed",
-                        message = "Nutrition not found!"
+                        status = "Failed",
+                        message = "Nutrition not found!",
+                        data = checkNutrition
                     });
 
+                //DateTimeOffset localDateTimeOffset = new DateTimeOffset(reqUserNutrition.UserNutritionDate, TimeZoneInfo.FindSystemTimeZoneById("Asia/Jakarta").BaseUtcOffset);
+                var datetime = reqUserNutrition.UserNutritionDate;
                 var userNutrition = new UserNutrition
                 {
                     UserID = reqUserNutrition.UserID,
                     NutritionID = reqUserNutrition.NutritionID,
-                    UserNutritionDate = reqUserNutrition.UserNutritionDate,
+                    UserNutritionDate = datetime,
                     Qty = reqUserNutrition.Qty,
                 };
 
                 if (!_userNutritionRep.CreateUserNutrition(userNutrition))
                 {
-                    ModelState.AddModelError("", "Something went wrong while saving");
-                    return StatusCode(500, ModelState);
+                    return StatusCode(500, new
+                    {
+                        status = "Failed",
+                        message = "Something went wrong while saving",
+                    });
                 }
 
                 return Ok(new
                 {
-                    status = "success",
-                    message = "User Nutrition Successfully created"
+                    status = "Success",
+                    message = "User Nutrition Successfully created",
+                    data = userNutrition
                 });
             }
             catch (Exception e)
@@ -76,36 +85,176 @@ namespace fitness_progress_service.Controllers
                     message = e.Message,
                     excption = e.InnerException.Message
                 });
-                throw;
+                
+            }
+        }
+
+        [HttpPut("{userNutritionId}")]
+        public IActionResult UpdateUserNutrition(int userNutritionId, [FromBody] ReqUserNutritionDto reqUserNutrition)
+        {
+            try
+            {
+                if (reqUserNutrition == null)
+                    return BadRequest(new
+                    {
+                        status = "Failed",
+                        message = "Requset not valid"
+                    });
+
+                var isUserNutritionExist = _userNutritionRep.GetUserNutrition(userNutritionId);
+
+                if (isUserNutritionExist == null)
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Nutrition not found!"
+                    });
+
+                //DateTimeOffset localDateTimeOffset = new DateTimeOffset(reqUserNutrition.UserNutritionDate, TimeZoneInfo.FindSystemTimeZoneById("Asia/Jakarta").BaseUtcOffset);
+                var datetime = reqUserNutrition.UserNutritionDate;
+                isUserNutritionExist.UserNutritionID = userNutritionId;
+                isUserNutritionExist.Qty = reqUserNutrition.Qty;
+                isUserNutritionExist.UserNutritionDate = datetime;
+
+                var updatedProgress = _userNutritionRep.UpdateUserNutrition(isUserNutritionExist);
+                if (updatedProgress == null)
+                {
+                    return StatusCode(500, new
+                    {
+                        status = "Failed",
+                        message = "Something went wrong updating user nutrition"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User Nutrition Successfully updated",
+                    data = updatedProgress
+                });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+                
             }
         }
 
         [HttpDelete("{userNutritionId}")]
         public IActionResult DeleteUserNutrition(int userNutritionId)
         {
-            var isUserNutritionExist = _userNutritionRep.GetUserNutrition(userNutritionId);
+            try
+            {
+                var isUserNutritionExist = _userNutritionRep.GetUserNutrition(userNutritionId);
 
-            if (isUserNutritionExist == null)
-                return NotFound(new
+                if (isUserNutritionExist == null)
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Nutrition not found!"
+                    });
+
+                if (!_userNutritionRep.DeleteUserNutrition(isUserNutritionExist))
                 {
-                    status = "failed",
-                    message = "User Nutrition not found!"
-                });
+                    return StatusCode(500, new
+                    {
+                        status = "Failed",
+                        message = "Something went wrong deleting user nutrition!"
+                    });
+                }
 
-            if (!_userNutritionRep.DeleteUserNutrition(isUserNutritionExist))
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User Nutrition Successfully Deleted"
+                });
+            }
+            catch (Exception e)
             {
                 return BadRequest(new
                 {
-                    status = "failed",
-                    message = "Something went wrong deleting user nutrition!"
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+                
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetUserNutritions()
+        {
+            try
+            {
+                var allUserNutritions = _userNutritionRep.GetUserNutritions();
+
+                if (allUserNutritions.Count <= 0)
+                {
+                    return Ok(new
+                    {
+                        status = "Success",
+                        message = "User Nutrition is empty!",
+                        data = allUserNutritions
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "All User Nutrition Successfully fetched",
+                    data = allUserNutritions
                 });
             }
-
-            return Ok(new
+            catch (Exception e)
             {
-                status = "success",
-                message = "User Nutrition Successfully Deleted"
-            });
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+            }
+        }
+
+        [HttpGet("{userNutritionId}")]
+        public IActionResult GetUserNutrition(int userNutritionId)
+        {
+            try
+            {
+                var userNutrition = _userNutritionRep.GetUserNutrition(userNutritionId);
+
+                if (userNutrition == null)
+                {
+                    return Ok(new
+                    {
+                        status = "Failed",
+                        message = "User Nutrition not found!",
+                        data = userNutrition
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User Nutrition Successfully fetched",
+                    data = userNutrition
+                });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new
+                {
+                    status = "Failed",
+                    message = e.Message,
+                    excption = e.InnerException.Message
+                });
+                
+            }
         }
     }
 }

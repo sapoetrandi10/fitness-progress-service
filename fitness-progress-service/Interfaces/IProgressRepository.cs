@@ -12,6 +12,7 @@ namespace fitness_progress_service.Interfaces
         public bool CreateProgress(Progress progress);
         public Progress UpdateProgress(Progress Progress);
         public bool DeleteProgress(Progress Progress);
+        public ICollection<Progress> GetProgresses();
         public Progress GetProgress(int progressId);
     }
 }

@@ -38,12 +38,29 @@ namespace fitness_progress_service.Repositories
             return saved > 0 ? true : false;
         }
 
+        public UserWorkout UpdateUserWorkout(UserWorkout UserWorkout)
+        {
+            var updated = _fitnessCtx.SaveChanges();
+
+            if (updated < 0)
+            {
+                return UserWorkout = null;
+            }
+
+            return UserWorkout;
+        }
+
         public bool DeleteUserWorkout(UserWorkout UserWorkout)
         {
             _fitnessCtx.Remove(UserWorkout);
             var saved = _fitnessCtx.SaveChanges();
 
             return saved > 0 ? true : false;
+        }
+
+        public ICollection<UserWorkout> GetUserWorkouts()
+        {
+            return _fitnessCtx.userWorkouts.ToList();
         }
 
         public UserWorkout GetUserWorkout(int userWorkoutId)

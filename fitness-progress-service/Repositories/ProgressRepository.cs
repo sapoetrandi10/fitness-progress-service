@@ -83,6 +83,10 @@ namespace fitness_progress_service.Repositories
             return saved > 0 ? true : false;
         }
 
+        public ICollection<Progress> GetProgresses()
+        {
+            return _fitnessCtx.progresses.ToList();
+        }
         public Progress GetProgress(int progressId)
         {
             var progress = _fitnessCtx.progresses.Where(p => p.ProgressID == progressId).FirstOrDefault();

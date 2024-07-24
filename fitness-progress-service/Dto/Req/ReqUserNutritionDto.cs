@@ -6,6 +6,6 @@
         public int UserID { get; set; }
         public int NutritionID { get; set; }
         public int Qty { get; set; } = 0;
-        public DateTime UserNutritionDate { get; set; } = DateTime.Now;
+        public DateTime UserNutritionDate { get; set; } = DateTime.UtcNow;
     }
 }

@@ -6,6 +6,6 @@
         public int UserID { get; set; }
         public int WorkoutID { get; set; }
         public int WorkoutDuration { get; set; } = 0;
-        public DateTime UserWorkoutDate { get; set; } = DateTime.Now;
+        public DateTime UserWorkoutDate { get; set; } = DateTime.UtcNow;
     }
 }

@@ -36,12 +36,29 @@ namespace fitness_progress_service.Repositories
             return saved > 0 ? true : false;
         }
 
+        public UserNutrition UpdateUserNutrition(UserNutrition UserNutrition)
+        {
+            var updated = _fitnessCtx.SaveChanges();
+
+            if (updated < 0)
+            {
+                return UserNutrition = null;
+            }
+
+            return UserNutrition;
+        }
+
         public bool DeleteUserNutrition(UserNutrition UserNutrition)
         {
             _fitnessCtx.Remove(UserNutrition);
             var saved = _fitnessCtx.SaveChanges();
 
             return saved > 0 ? true : false;
+        }
+
+        public ICollection<UserNutrition> GetUserNutritions()
+        {
+            return _fitnessCtx.userNutritions.ToList();
         }
 
         public UserNutrition GetUserNutrition(int userNutritionId)
